@@ -1,10 +1,9 @@
-import "reflect-metadata";
 import { ApolloServer } from "apollo-server-micro";
 import { PrismaClient } from "@prisma/client";
 import { NextApiRequest, NextApiResponse } from "next";
-import { buildSchema } from "type-graphql";
-import { TodoCrudResolver } from "@generated/type-graphql/index";
+
 import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
+import schema from "../../src/lib/schema";
 
 export const config = {
   api: {
@@ -13,24 +12,22 @@ export const config = {
   },
 };
 
-const graphql = async (req: NextApiRequest, res: NextApiResponse) => {
-  const prisma = new PrismaClient();
+const prisma = new PrismaClient();
 
-  const typeSchema = await buildSchema({
-    resolvers: [TodoCrudResolver],
-    // emitSchemaFile: path.resolve(__dirname, './generated-schema.graphql'),
-    validate: false,
-  });
-
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   const apolloServer = new ApolloServer({
-    schema: typeSchema,
+    schema: await schema(),
     context: () => ({ prisma }),
     plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
+    debug: true,
   });
+  const startServer = apolloServer.start();
 
-  return apolloServer.start().then(() => {
-    apolloServer.createHandler({ path: "/api/graphql" })(req, res);
-  });
-};
-
-export default graphql;
+  await startServer;
+  await apolloServer.createHandler({
+    path: "/api/graphql",
+  })(req, res);
+}

@@ -1,0 +1,20 @@
+schema: ./graphql/schema.graphql
+documents: "./src/**/*.graphql"
+generates:
+  ./graphql/types-and-hooks.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-react-query
+    config:
+      fetcher:
+        endpoint: '"/api/graphql"'
+        fetcher: fetch
+        fetchParams:
+          {
+            headers:
+              {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+              },
+          }
